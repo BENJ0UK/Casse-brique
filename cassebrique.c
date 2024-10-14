@@ -17,11 +17,11 @@ int rx = 300;// x raquette
 int ry = 460;//y raquette
 int dans_le_menu = 1;
 int choix_raquette;
-int programLaunched =1;
+int programLaunched;
 int tbx=0;
 int tby=0;
 int tab_brique[7][4];
-
+int fin_jeu = 0;
 
 
 void menu(){
@@ -59,13 +59,12 @@ void sortie_map(){
     }
     
     // bordure balle y
-    if (by <= 0){
-       k=2;        
-       printf("error sortie de map\n");
-    }else if (by >= 700){ //perdu
-      k=2;
-      
-       
+    if (by >= 700){
+      programLaunched=0;  
+  
+    }else if (by <= 0){ //perdu
+     k=2;   
+     printf("error sortie de map\n");
     }
     
     // bordure raquette en x
@@ -119,7 +118,7 @@ for (tbx=0;tbx<=6;tbx++){
 void collision(){
 //rx-2 car si non la balle traversait la raquette au niveau du bord gauche
 //balle raquette
-  if ((rx-2<=bx) && (bx<=rx+100) && (ry==by)){
+  if ((rx-2<=bx) && (bx<=rx+100) && (ry<=by) && (by<=ry+10)){
     k=1; 
   }
 }
@@ -129,15 +128,19 @@ void collision_bb(){
 
 for (tbx=0;tbx<=6;tbx++){ 
     for (tby=1;tby<=4;tby++){
-       if ((tab_brique[tbx][tby]== 1) && ((bx>=tbx*101) && (bx<=(tbx*101)+100)) && ((by>= (tby*11)+10) && (by<= tby*11))){
+       if (tab_brique[tbx][tby]== 1) {
+     
+          if ((bx>=tbx*101) && (bx<=(tbx*101)+100) && (by<= (tby*11)+10) && (by>= tby*11)){
+            
          tab_brique[tbx][tby]=0;
-          if (by>= (tby*11)+10){
-               k=2;
-               briques();
-          }else if (by<= tby*11){
-               k=1;
-               briques();
-          }
+              if (by>=(tby*11)+10){
+                 k=2;
+                 briques();
+               }else if (by<= tby*11){
+                 k=1;
+                 briques();
+               }
+           }
         }
       }
    
@@ -213,6 +216,7 @@ void gameLoop() {
         }
     }
        // jeu 
+    
     int programLaunched = 1;
     while (programLaunched == 1) {
         
@@ -237,9 +241,9 @@ void gameLoop() {
                 default:
                     break;
             }
-        }
-       
+        }    
         drawGame();
+      
     }
 }
 
