@@ -217,7 +217,7 @@ void gameLoop() {
     }
        // jeu 
     
-    int programLaunched = 1;
+    programLaunched = 1;
     while (programLaunched == 1) {
         
         SDL_Event event;
