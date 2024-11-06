@@ -1,11 +1,11 @@
   #include <SDL2/SDL.h>
 #include <unistd.h>
-#include "function.h"
 #include <SDL2/SDL_ttf.h>
-
-#define WINDOW_WIDTH 1200 
-#define WINDOW_HEIGHT 1000
-#define FPS 60
+#include "sdl_helper/function.h"
+#include "sdl_helper/text_functions.h"
+#include "sdl_helper/audio_functions.h"
+#include "sdl_helper/constants.h"
+ #include <time.h>
 
 
 //                                                                                  Variables
@@ -25,7 +25,6 @@ int hauteur_brique = 50;
 int largeur_brique = 96;
 int tab_brique[10][4];
 int fin_jeu = 0;
-int check_rebond=0;
 double inclinaison_bb;
 int xbrique ;
 int ybrique ;
@@ -38,7 +37,19 @@ int apparition_sorciere = 0;
 int move_sorciere = 0;
 int xsorciere = 1000;
 int compteur_briques = 0;
+int case_tab_ingred = 0;
+int ingred =0;
+int ingred_fall=0;
+int compteur_ingred=0;
+int score = 0;
 
+typedef struct iNGREDIENT{
+    int apparition_ingredient;
+    int x_ingred;
+    int y_ingred;
+} iNGREDIENT;
+
+iNGREDIENT tableau_ingredients [100];
 
 //                                                                                  reset variables
 void reset_variable(){
@@ -55,7 +66,6 @@ void reset_variable(){
     largeur_brique = 96;
     tab_brique[10][4];  
     fin_jeu = 0;
-    check_rebond=0;
     r=3;
     compteur_piece=0;
     nombre_vie=3;
@@ -63,23 +73,25 @@ void reset_variable(){
     mouse_on_start = 0;
     apparition_sorciere = 0;
     move_sorciere = 0;
-    xsorciere = 1000;
+    xsorciere = 1200;
     compteur_briques = 0;
-   
+    
+ 
 }
+
 
 //                                                                                    Menu
 
 void menu(){
   
-sprite(0,0,"maison_menu.bmp");
+sprite(0,0,"sprite/maison_menu.bmp");
   switch (mouse_on_start){
     case 0:
-      sprite (450,800, "start1.bmp");
+      sprite (450,800, "sprite/start1.bmp");
       
       break;
     case 1:
-      sprite (450,800, "start2.bmp");
+      sprite (450,800, "sprite/start2.bmp");
     
       break;
   }
@@ -92,112 +104,44 @@ sprite(0,0,"maison_menu.bmp");
 
 
 void init_tab(){
-for (tbx=0;tbx<=9;tbx++){
-    for (tby=1;tby<=4;tby++){ 
+
+for (tby=1;tby<=4;tby++){ 
+    for (tbx=0;tbx<=9;tbx++){
        tab_brique[tbx][tby] = 1;
     
      }
  }
 }
+
 //                                                                            Animation chaudron 
 
 
 void animation_chaudron(){
-int changement_frame;
-for (changement_frame=0;changement_frame<=15;changement_frame++){
-    clear();
-    sprite(0,0,"maison_interieur15.bmp");
-    sprite(xsorciere,650,"sorcière_gentille.bmp");
-    sprite(0,600,"bulle_texte.bmp");
-   switch (changement_frame){
-    
-    case 1:
-    
-     sprite(370,520,"bulle1.bmp");
-     usleep(1000000 / FPS);
-    break;
 
-    case 2:
-     sprite(370,520,"bulle2.bmp");
-     usleep(1000000 / FPS);    
-
-    break; 
-
-    case 3:
-     sprite(370,520,"bulle3.bmp");
-     usleep(1000000 / FPS);
-    break;
-
-    case 4:
-     sprite(370,520,"bulle4.bmp");
-     usleep(1000000 / FPS);
-    break; 
-
-    case 5:
-     sprite(370,520,"bulle5.bmp");
-     usleep(1000000 / FPS);
-    break; 
-
-    case 6:
-     sprite(370,520,"bulle6.bmp");
-     usleep(1000000 / FPS);
-    break; 
-
-    case 7:
-   
-     sprite(370,520,"bulle7.bmp");
-     usleep(1000000 / FPS);
-    break; 
-
-    case 8:
-    
-     sprite(370,520,"bulle8.bmp");
-     usleep(1000000 / FPS);
-    break;
-
-    case 9:
+int animeframe=14;
+char bulle [300];
+for (animeframe = 1; animeframe<=14;animeframe++){
+clear();
+sprite(0,0,"sprite/maison_interieur15.bmp");
+sprite(xsorciere,650,"sprite/sorcière_gentille.bmp");
+sprite(0,600,"sprite/bulle_texte.bmp");
   
-     sprite(370,520,"bulle11.bmp");
-     usleep(1000000 / FPS);
-    break;
-
-     case 12:
-    
-     sprite(370,520,"bulle12.bmp");
-     usleep(1000000 / FPS);
-    break;
-
-     case 13:
-     
-     sprite(370,520,"bulle13.bmp");
-     usleep(1000000 / FPS);
-    break;
-
-     case 14:
-    
-     sprite(370,520,"bulle14.bmp");
-     usleep(1000000 / FPS);
-    break;
-
-     case 15:
-    
-     sprite(370,520,"bulle14.bmp");
-     usleep(1000000 / FPS);
-    break;
-
-    default:
-    break;
-  }
+  sprintf(bulle,"bullebulle/bulle%d.bmp",animeframe);
+  sprite (370,520,bulle);
   actualize();
-  usleep(1000000 / FPS);
- } 
+   usleep(50000);
+ 
+    }
+
+ 
 }
 //                                                                                 Init_game
 
 
 void init_game(){
 init_tab();
-
+srand(time(NULL));
+audioLoadAndPlay("sdl_helper/sound/theme_sorciere.wav",3);
 }
 
 //                                                                              balle immobile
@@ -235,7 +179,7 @@ void sortie_map(){
     
     // bordure balle y
     if (by >= 990){//perdu
-     
+     audioLoadAndPlay("sdl_helper/sound/son_mort.wav",1);
      nombre_vie-=1;
      reset_balle();
     
@@ -248,8 +192,8 @@ void sortie_map(){
     if (rx < (-20)){
        rx=rx+30;
        
-    }else if (rx > 850){
-        rx=rx-30;;    
+    }else if (rx > 880){
+        rx= rx-30;  
    
     }
 }
@@ -271,9 +215,10 @@ by=by+k;
 //                                                                              Draw briques
 
 
-void briques(){
-for (tbx=0;tbx<=9;tbx++){
-    for (tby=1;tby<=4;tby++){ 
+void briques(){    
+
+for (tby=1;tby<=4;tby++){ 
+    for (tbx=0;tbx<=9;tbx++){
 
         if (tab_brique[tbx][tby] == 1){
   
@@ -302,9 +247,9 @@ case 0:
        for (int xp = 0; xp<=350; xp++ ){
          
                clear();
-               sprite(0,0,"maison_menu.bmp");
+               sprite(0,0,"sprite/maison_menu.bmp");
                xsorciere = xsorciere - 1;
-               sprite(xsorciere,650,"sorcière_gentille.bmp");
+               sprite(xsorciere,650,"sprite/sorcière_gentille.bmp");
                actualize();
                usleep(100000 / FPS);
                
@@ -317,9 +262,9 @@ case 1:
 
        clear();
        
-       sprite(0,0,"maison_menu.bmp");
-       sprite(xsorciere,650,"sorcière_gentille.bmp");
-       sprite(0,600,"bulle_texte.bmp");
+       sprite(0,0,"sprite/maison_menu.bmp");
+       sprite(xsorciere,650,"sprite/sorcière_gentille.bmp");
+       sprite(0,600,"sprite/bulle_texte.bmp");
        actualize();
        usleep(100000 / FPS);
       
@@ -327,12 +272,13 @@ case 1:
 
 case 2:
         clear();
+        audioLoadAndPlay("sdl_helper/sound/grincement_porte.wav",2);
        for (int xp2 = 0; xp2<=350; xp2++ ){
          
                clear();
-               sprite(0,0,"maison_menu_porte_ouverte.bmp");
+               sprite(0,0,"sprite/maison_menu_porte_ouverte.bmp");
                xsorciere = xsorciere + 1;
-               sprite(xsorciere,650,"sorcière_gentille.bmp");
+               sprite(xsorciere,650,"sprite/sorcière_gentille.bmp");
                actualize();
                usleep(100000 / FPS);
        }
@@ -346,9 +292,9 @@ case 3:
        for (int xp2 = 0; xp2<=350; xp2++ ){
          
                clear();
-               sprite(0,0,"maison_interieur15.bmp");
+               sprite(0,0,"sprite/maison_interieur15.bmp");
                xsorciere = xsorciere - 1;
-               sprite(xsorciere,650,"sorcière_gentille.bmp");
+               sprite(xsorciere,650,"sprite/sorcière_gentille.bmp");
                actualize();
                usleep(100000 / FPS);
        }
@@ -384,14 +330,41 @@ void collision(){
 //balle raquette
  
 
- if (( (k>0) && (bx>=(rx-3)) && (bx+20<=(rx+153))) && (by+20>=ry) && (by+20<=ry+20)){
+ if (( (k>0) && (bx-10>=(rx-3)) && (bx+10<=(rx+153))) && (by+10>=ry) && (by+10<=ry+20)){
   k=-k;
-  if (compteur_briques >0){
-    
-  }
+ 
  }
  
 }  
+
+//                                                                                ingrédients
+
+void ingrédients(){
+   for (case_tab_ingred = 0; case_tab_ingred <= 100; case_tab_ingred ++){
+        if (tableau_ingredients [case_tab_ingred].apparition_ingredient == 1){
+         drawCircle(tableau_ingredients[case_tab_ingred].x_ingred,tableau_ingredients[case_tab_ingred].y_ingred,10);
+         
+           if (tableau_ingredients[case_tab_ingred].y_ingred > 995){
+              tableau_ingredients[case_tab_ingred].apparition_ingredient = 0;
+            }
+        
+           if (((tableau_ingredients[case_tab_ingred].x_ingred-10>=(rx-3)) && (tableau_ingredients[case_tab_ingred].x_ingred+10<=(rx+153))) && ((tableau_ingredients[case_tab_ingred].y_ingred+10>=ry) && (tableau_ingredients[case_tab_ingred].y_ingred+10<=ry+20))){
+             tableau_ingredients[case_tab_ingred].apparition_ingredient = 0;
+             score++;
+            }
+          tableau_ingredients[case_tab_ingred].y_ingred = tableau_ingredients[case_tab_ingred].y_ingred+3;
+        }
+    }
+
+
+
+ 
+
+
+
+}
+
+
 //                                                                          collisions balle-brique
 
 
@@ -402,79 +375,82 @@ void collision_bb(){
 
 
 // k<0 haut k>0 bas j<0 gauche j>0 droite
-    for (tbx=0;tbx<=9;tbx++){ 
-       for (tby=1;tby<=4;tby++){
+    for (tby=1;tby<=4;tby++){
+       for (tbx=0;tbx<=9;tbx++){ 
             xbrique = tbx*largeur_brique;
             ybrique = tby*hauteur_brique;
                   //transforme les coordonnées de tableau en coordonnées de fenêtre de jeu:
-            check_rebond =0;
-
-         
+          
 
                     // Bas
-          if (((k<0) && (check_rebond==0) && (bx>=xbrique) && (bx<=(xbrique)+largeur_brique) && (by>=ybrique+r) && (by<=ybrique+hauteur_brique+r))){
+          if (((k<0) && (bx-10>=xbrique) && (bx+10<=(xbrique)+largeur_brique) && (by-10>=ybrique) && (by-10<=ybrique+hauteur_brique))){
                 if (tab_brique[tbx][tby] == 1) {
                    tab_brique[tbx][tby]=0;
                    compteur_piece+=1;
                    k=-k;
                    compteur_briques+=1;
+                   tableau_ingredients[compteur_ingred].x_ingred = (tbx*largeur_brique)+48;
+                   tableau_ingredients[compteur_ingred].y_ingred = (tby*hauteur_brique)+50;
+                   tableau_ingredients [compteur_ingred].apparition_ingredient= 1;
+                   compteur_ingred++;
+                
                    
-                   
-                   check_rebond =1;
                 }
             }
 
 
                     // Haut
-           if (((k>0) && (check_rebond==0) && (bx>=xbrique) && (bx<=xbrique+largeur_brique) && (by>=ybrique-r) && (by<=ybrique+hauteur_brique-r))){
+           if (((k>0) && (bx-10>=xbrique) && (bx+10<=xbrique+largeur_brique) && (by+10>=ybrique) && (by+10<=ybrique+hauteur_brique))){
                 if (tab_brique[tbx][tby] == 1) {
                    tab_brique[tbx][tby]=0;
                    compteur_piece+=1;
                    k=-k;
                    compteur_briques+=1;
-                 
-                   check_rebond =1;
+                   tableau_ingredients[compteur_ingred].x_ingred = (tbx*largeur_brique)+48;
+                   tableau_ingredients[compteur_ingred].y_ingred = (tby*hauteur_brique)+50;
+                tableau_ingredients [compteur_ingred].apparition_ingredient= 1;
+                   compteur_ingred++;
                 }
             }
 
 
                     //droite
-           if ((j<0) && (check_rebond==0) && (bx<=xbrique+largeur_brique+3) && (bx>=xbrique+3) && (by<=ybrique+hauteur_brique) && (by>=ybrique)){
+           if ((j<0) && (bx-10<=xbrique+largeur_brique) && (bx-10>=xbrique) && (by+10<=ybrique+hauteur_brique) && (by-10>=ybrique)){
                 if (tab_brique[tbx][tby] == 1) {
                    tab_brique[tbx][tby]=0;
                    compteur_piece+=1;
                    j=-j;
                    compteur_briques+=1;
-               
-                   check_rebond =1;
+                   tableau_ingredients[compteur_ingred].x_ingred = (tbx*largeur_brique)+48;
+                   tableau_ingredients[compteur_ingred].y_ingred = (tby*hauteur_brique)+50;
+                   tableau_ingredients [compteur_ingred].apparition_ingredient= 1;
+                   compteur_ingred++;
                 }
             }
 
 
                     // gauche
-           if ((j>0) && (check_rebond==0) && (bx<=xbrique+largeur_brique-3) && (bx>=xbrique-3) && (by<=ybrique+hauteur_brique) && (by>=ybrique)){
+           if ((j>0)  && (bx+10<=xbrique+largeur_brique) && (bx+10>=xbrique) && (by+10<=ybrique+hauteur_brique) && (by-10>=ybrique)){
                 if (tab_brique[tbx][tby] == 1) {
                    tab_brique[tbx][tby]=0;
                    compteur_piece+=1;
                    j=-j;
                    compteur_briques+=1;
-                 
-                   check_rebond =1;
-                 
+                   tableau_ingredients[compteur_ingred].x_ingred = (tbx*largeur_brique)+48;
+                   tableau_ingredients[compteur_ingred].y_ingred = (tby*hauteur_brique)+50;
+                   tableau_ingredients [compteur_ingred].apparition_ingredient= 1;
+                   compteur_ingred++;
                 } 
+              
             }
-  
+           
         }
     }
+   
         actualize();
 }
 
 
-//                                                                                pièces
-
-void pieces(){
-
-}
 
 //                                                                                  vie
 
@@ -482,11 +458,13 @@ void pieces(){
 void vie(){
 switch (nombre_vie){
        case 2 :
-          sprite (0,0,"avant_derniere_vie.bmp");
+        
+          sprite (0,0,"sprite/avant_derniere_vie.bmp");
           break;
 
        case 1 :
-          sprite (0,0,"derniere_vie.bmp");
+          
+          sprite (0,0,"sprite/derniere_vie.bmp");
           break;
         
        
@@ -498,9 +476,10 @@ switch (nombre_vie){
 }
  
 //                                                                             fenêtre de score
-void score(){
+void score_fonction(){
+    
     int y_barre_score = 740;
-sprite(1001,0,"chaudron_score_test.bmp");
+sprite(1001,0,"sprite/chaudron_score_test.bmp");
 
 
 }
@@ -508,6 +487,7 @@ sprite(1001,0,"chaudron_score_test.bmp");
 
 
 void drawGame(){
+
     switch (dans_le_menu){ 
     
     case 1 :
@@ -529,17 +509,16 @@ void drawGame(){
     case 3 : 
 
         clear();
-        sprite(0,0,"maison_interieur_jeu.bmp");
-        score();
+        sprite(0,0,"sprite/maison_interieur_jeu.bmp");
+        score_fonction();
         changeColor(255,255,0);
-        sprite(bx,by,"particule_magie.bmp");
+        sprite(bx-10,by-10,"sprite/particule_magie.bmp");
         vie();
-        sprite (rx,ry,"raquette_chaudron.bmp");
+        sprite (rx,ry,"sprite/raquette_chaudron.bmp");
         briques();
         collision();
-        collision_bb();
-        
-        pieces();
+        collision_bb(); 
+        ingrédients();
         deplacement_balle();
         sortie_map();
         if (nombre_vie==0){
@@ -596,8 +575,9 @@ void gameLoop() {
        // jeu 
     
     programLaunched = 1;
+    
     while (programLaunched == 1) {
-        
+       
         SDL_Event event;
         while (SDL_PollEvent(&event)) {
             
@@ -618,9 +598,9 @@ void gameLoop() {
                 }
                 if (dans_le_menu == 3){
 
-                    if (event.motion.x<rx+50){
+                    if ((event.motion.x<rx+75) && (event.motion.x > 0) ){
                       rx=rx-10;
-                    }else if(event.motion.x>rx+50){
+                    }else if((event.motion.x>rx+75) && (event.motion.x <1000)){
                       rx=rx+10;
                     }
                 }
@@ -661,7 +641,7 @@ void gameLoop() {
 
 
 int main(){
-    
+   
     init(WINDOW_WIDTH, WINDOW_HEIGHT);
     init_game();
     gameLoop();
