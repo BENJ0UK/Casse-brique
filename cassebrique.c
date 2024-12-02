@@ -10,7 +10,6 @@
 
 /* to do list :
  -texte sorcière
- -sprite briques
  -changer vitesse de balle
 */
 
@@ -21,6 +20,7 @@ int v_x = 0; //direction x balle
 int v_y = 0;// direction y balle
 int rx = 150;// x raquette 
 int ry = 900;//y raquette
+int start_game=0;
 int vitesse_balle;
 int collision_balle_raquette;
 int dans_le_menu = 1;
@@ -36,6 +36,7 @@ int ybrique ;
 int r=3;
 int nombre_vie=3;
 int commencer_jeu=0;
+int press_h_to_start_apparition=0;
 int mouse_on_start = 0;
 int move_sorciere = 0;
 int xsorciere = 1000;
@@ -48,6 +49,8 @@ int  case_tab_score=0;
 int case_tab_score_2=0;
 int mouse_on_door = 0;
 int mouse_on_restart = 0;
+int mouse_on_exit =0;
+int ingredient_is_falling=0;
 typedef struct iNGREDIENT{
     int apparition_ingredient;
     int x_ingred;
@@ -70,8 +73,8 @@ int fantome_switch=1;
 
 
    
- //                                                                        fantôme menu start
-void fantome_start(){  
+//                                                                            fantôme menu start
+/*void fantome_start(){  
     int fantome_hide; 
   
     
@@ -134,27 +137,7 @@ void fantome_start(){
             break;
         }
 
-    }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    }*/
 
 //                                                                                    Menu
 void menu(){
@@ -167,11 +150,10 @@ sprite(0,0,"sprite/maison_menu.bmp");
       break;
     case 1:
       sprite (450,800, "sprite/start2.bmp");
-    
       break;
   }
    
-  fantome_start();
+ // fantome_start();
 
 }
 
@@ -198,17 +180,36 @@ void menu_fin(){
          sprite(0,0,"sprite/maison_interieur_fin.bmp");
          if (nombre_vie==0){
             sprite(xsorciere,650,"sprite/sorciere_pleure.bmp"); 
+            sprite (400, 100, "sprite/game_over.bmp");
+            sprite(0,600,"sprite/bulle_texte.bmp");
+            textChangeColor (224, 127, 36,0);
+            textDrawText("dommage, merci ",120,790,texte_sorciere_16);
+            textDrawText("quand meme...",120,815,texte_sorciere_16);
             
            }else{
             sprite(xsorciere,650,"sprite/sorciere_contente.bmp"); 
+            sprite (320, 60, "sprite/Victory.bmp");
+            sprite(0,600,"sprite/bulle_texte.bmp");
+            textChangeColor (224, 127, 36,0);
+            textDrawText("Super ! ",120,790,texte_sorciere_16);
+            textDrawText("Merci beaucoup",120,815,texte_sorciere_16);
+            
            }   
 
        switch (mouse_on_restart){
                     case 0:
-                        sprite (500,800,"sprite/bouton_restart.bmp");
+                        sprite (500,650,"sprite/bouton_restart.bmp");
                         break;
                     case 1:
-                        sprite (500,800,"sprite/bouton_restart_pushed.bmp");
+                        sprite (500,650,"sprite/bouton_restart_pushed.bmp");
+                        break;
+             }
+       switch (mouse_on_exit){
+                    case 0:
+                        sprite (520,800,"sprite/exit1.bmp");
+                        break;
+                    case 1:
+                        sprite (520,800,"sprite/exit2.bmp");
                         break;
              }
 
@@ -218,12 +219,12 @@ void menu_fin(){
                 sprite(580,500,"sprite/etoile_grise.bmp");
                 sprite(640,500,"sprite/etoile_grise.bmp");
             }
-            if (score_total*20>=400 && score_total*20<550){
+            if (score_total*20>=400 && score_total*20<560){
                 sprite(520,500,"sprite/etoile_jaune.bmp");
                 sprite(580,500,"sprite/etoile_grise.bmp");
                 sprite(640,500,"sprite/etoile_grise.bmp");
             }
-            if (score_total*20>=550 && score_total*20<700){
+            if (score_total*20>=560 && score_total*20<700){
                 sprite(520,500,"sprite/etoile_jaune.bmp");
                 sprite(580,500,"sprite/etoile_jaune.bmp");
                 sprite(640,500,"sprite/etoile_grise.bmp");
@@ -234,6 +235,7 @@ void menu_fin(){
                 sprite(640,500,"sprite/etoile_jaune.bmp");
                 
             }
+   
 
 }
 
@@ -262,7 +264,17 @@ void animation_chaudron(){
      sprite(0,0,"sprite/maison_interieur15.bmp");
      sprite(1001,0,"sprite/chaudron_score_test.bmp");
      sprite(xsorciere,650,"sprite/sorcière_gentille.bmp");
-     sprite(0,600,"sprite/bulle_texte.bmp");
+     sprite(0,600,"sprite/bulle_texte_700.bmp");
+     textChangeColor (224, 127, 36,0);
+     textDrawText("je n'arrive plus a",180,740,texte_sorciere_16);
+     textDrawText("retrouver les",180,765,texte_sorciere_16);
+     textDrawText("ingredients de ma ",180,790,texte_sorciere_16);
+     textDrawText("recette.",180,815,texte_sorciere_16);
+     textDrawText("tu dois m'aider",180,840,texte_sorciere_16);
+     textDrawText("a les retrouver !",180,865,texte_sorciere_16);
+     textDrawText("clique sur le ",180,890,texte_sorciere_16);
+     textDrawText("chaudron pour lancer  ",180,915,texte_sorciere_16);
+     textDrawText("les recherches.",180,940,texte_sorciere_16);
      sprintf(bulle,"bullebulle/bulle%d.bmp",animeframe);
      sprite (370,520,bulle);
      actualize();
@@ -308,13 +320,30 @@ void reset_balle(){
     v_x=0;
     bx= 400;
     by= 850;
+    vitesse_balle = 0;
+    start_game =0;
 
 }
 
 //                                                                                 démarrer
-void démarrer(){      
+void démarrer(){  
+    // seulement si h pressed
+    
     v_y=2;
     v_x=2;
+/*if (score_total< 20 && start_game==1){
+       v_y=2;
+       v_x=2;
+    } 
+    if (score_total>=20 && score_total <28 && start_game==1 ){
+       v_y=4;
+       v_x=4;
+    }
+    if (score_total>=28 && start_game==1 ){
+       v_y=8;
+       v_x=8;
+    }
+    start_game=1;*/
 }
 
 //                                                                            Bordure de fenêtre
@@ -330,7 +359,7 @@ void sortie_map(){
     
     // bordure balle y
     if (by >= 990){//perdu
-     audioLoadAndPlay("sdl_helper/sound/son_mort.wav",1);
+     audioLoadAndPlay("sdl_helper/sound/son_verre1.wav",1);
      nombre_vie-=1;
      stop_ingred = 1;
      reset_balle();
@@ -355,8 +384,27 @@ void sortie_map(){
 
 //                                                                          Déplacements de balle
 void deplacement_balle(){ 
-bx=bx+v_x;
-by=by+v_y;
+
+/*if (start_game == 1){
+   if (score_total< 20 ){
+       v_y=2;
+       v_x=2;
+       start_game =0;
+    } 
+    if (score_total>=20 && score_total <28 ){
+       v_y=4;
+       v_x=4;
+       start_game =0;
+    }
+    if (score_total>=28 ){
+       v_y=8;
+       v_x=8;
+       start_game =0;
+    }
+ 
+ }  */
+  bx=bx+v_x;
+  by=by+v_y;
 }
 
 //                                                                               Draw briques
@@ -400,29 +448,30 @@ case 1:
        if (mouse_on_door == 0){
             sprite(0,0,"sprite/maison_menu.bmp");
             sprite(xsorciere,650,"sprite/sorcière_gentille.bmp");
-            sprite(0,600,"sprite/bulle_texte.bmp");
+            sprite(0,600,"sprite/bulle_texte_700.bmp");
             textChangeColor (224, 127, 36,0);
-            textDrawText("hey! j'ai besoin",150,740,texte_sorciere_12);
-            textDrawText("de ton aide",150,760,texte_sorciere_12);
-            textDrawText("pour concocter",150,780,texte_sorciere_12);
-            textDrawText("une toute",150,800,texte_sorciere_12);
-            textDrawText("nouvelle potion!",150,820,texte_sorciere_12);
-            textDrawText("clique sur la",150,840,texte_sorciere_12);
-            textDrawText("porte pour venir",150,860,texte_sorciere_12);
-            textDrawText("m'aider.",150,880,texte_sorciere_12);
+            textDrawText("hey! j'ai besoin",190,740,texte_sorciere_16);
+            textDrawText("de ton aide",190,765,texte_sorciere_16);
+            textDrawText("pour concocter",190,790,texte_sorciere_16);
+            textDrawText("une toute",190,815,texte_sorciere_16);
+            textDrawText("nouvelle potion!",190,840,texte_sorciere_16);
+            textDrawText("clique sur la",190,865,texte_sorciere_16);
+            textDrawText("porte pour venir",190,890,texte_sorciere_16);
+            textDrawText("m'aider.",190,915,texte_sorciere_16);
 
        } else if (mouse_on_door == 1){
             sprite(0,0,"sprite/maison_menu_porte_ouverte.bmp");
             sprite(xsorciere,650,"sprite/sorcière_gentille.bmp");
-            sprite(0,600,"sprite/bulle_texte.bmp");
-            textDrawText("hey! j'ai besoin",150,740,texte_sorciere_12);
-            textDrawText("de ton aide",150,760,texte_sorciere_12);
-            textDrawText("pour concocter",150,780,texte_sorciere_12);
-            textDrawText("une toute",150,800,texte_sorciere_12);
-            textDrawText("nouvelle potion!",150,820,texte_sorciere_12);
-            textDrawText("clique sur la",150,840,texte_sorciere_12);
-            textDrawText("porte pour venir",150,860,texte_sorciere_12);
-            textDrawText("m'aider.",150,880,texte_sorciere_12);
+            sprite(0,600,"sprite/bulle_texte_700.bmp");
+            textChangeColor (224, 127, 36,0);
+            textDrawText("hey! j'ai besoin",190,740,texte_sorciere_16);
+            textDrawText("de ton aide",190,765,texte_sorciere_16);
+            textDrawText("pour concocter",190,790,texte_sorciere_16);
+            textDrawText("une toute",190,815,texte_sorciere_16);
+            textDrawText("nouvelle potion!",190,840,texte_sorciere_16);
+            textDrawText("clique sur la",190,865,texte_sorciere_16);
+            textDrawText("porte pour venir",190,890,texte_sorciere_16);
+            textDrawText("m'aider.",190,915,texte_sorciere_16);
        }
 
        actualize();
@@ -494,6 +543,21 @@ default:
 
 }
 
+//                                                                              Press H to start
+void press_h_to_start(){
+    compteur_frame ++;
+
+    if (v_x == 0 && v_y == 0){
+        if (compteur_frame <= 60){
+    textChangeColor(255,255,255,0);
+    textDrawText ("Press h to start",250,600,texte_sorciere_28);
+        }
+    }
+    if (compteur_frame>= 120){
+        compteur_frame =0;
+    }
+}
+
 //                                                                        Collisions balle-raquettes
 void collision(){
 //rx-2 car si non la balle traversait la raquette au niveau du bord gauche
@@ -515,7 +579,7 @@ void ingrédients(){
   
    for (case_tab_ingred = 0; case_tab_ingred <= 100; case_tab_ingred ++){
         if (tableau_ingredients [case_tab_ingred].apparition_ingredient == 1){
-
+            ingredient_is_falling = 1;
             
             
             switch (tableau_ingredients [case_tab_ingred].num_sprite){
@@ -541,11 +605,13 @@ void ingrédients(){
          
            if (tableau_ingredients[case_tab_ingred].y_ingred > 995 ){
               tableau_ingredients[case_tab_ingred].apparition_ingredient = 0;
-             
+              ingredient_is_falling = 0;
+              score_total++; 
             }
         
            if (((tableau_ingredients[case_tab_ingred].x_ingred+25>=rx) && (tableau_ingredients[case_tab_ingred].x_ingred+25<=(rx+150))) && ((tableau_ingredients[case_tab_ingred].y_ingred+50>=ry) && (tableau_ingredients[case_tab_ingred].y_ingred+50<=ry+20))){
              tableau_ingredients[case_tab_ingred].apparition_ingredient = 0;
+             ingredient_is_falling = 0;
              score_total++;    
             }
             
@@ -650,7 +716,7 @@ void collision_bb(){
 
 //                                                                                   vie
 void vie(){
-switch (nombre_vie){
+   switch (nombre_vie){
        case 3 :
         sprite (1010,895,"sprite/potion.bmp");
         sprite (1075,895,"sprite/potion.bmp");
@@ -669,6 +735,10 @@ switch (nombre_vie){
        default:
           break;
     }
+
+   if (nombre_vie == 0 || (compteur_briques == 36 && collision_balle_raquette == 1 && ingredient_is_falling == 0) ){
+        dans_le_menu = 4;
+    }
     
 }
  
@@ -676,14 +746,23 @@ switch (nombre_vie){
 void score_fonction(){   
   
 
-  y_score = 746 ; // évite que la première barre monte toute seule
-// le prblm vient des sprites, plus il y a de sprite de barres, plus c'est lent. peut être trop de sprite (701 ça fait bcp ma gueule).
+  y_score = 770 ; // évite que la première barre monte toute seule
+
             for (int x=0;x<=score_total;x++){
-                    if (score_total <= 700){
+                    if (score_total <= 35){
                      changeColor(88,38,112);
                      drawRect(x_score,y_score,103,score_total*(-20));
+                    }else if (score_total == 36){
+                     changeColor(88,38,112);
+                     drawRect(x_score,y_score,103,-701);
                     }
             }
+    if (score_total == 20){
+        start_game = 1;
+    }
+    if (start_game == 28){
+        start_game = 1;
+    }
 }
 
 //                                                                                 DrawGame
@@ -709,17 +788,14 @@ void drawGame(){
   
     
     case 3 : 
-        clear();   
+        clear(); 
         changeColor(224,127,36);
         sprite(0,0,"sprite/maison_interieur_jeu.bmp");
         sprite(1001,0,"sprite/chaudron_score_test.bmp");
         sprite(bx-10,by-10,"sprite/particule_magie.bmp");
         sprite (rx,ry,"sprite/raquette_chaudron.bmp");
+        press_h_to_start();
         vie(); 
-        if (nombre_vie==0 || (compteur_briques == 36 && collision_balle_raquette == 1) ){
-            dans_le_menu = 4;
-        }
-
         briques();
         collision();
         collision_bb(); 
@@ -776,6 +852,7 @@ void KeyPressed(SDL_Keycode touche){
         
         case SDLK_h:
             démarrer();
+            
             break;
         case SDLK_l:
             v_y=-v_y;
@@ -822,10 +899,15 @@ void gameLoop() {
                         mouse_on_door = 0;
                     }
                     
-                    if ((dans_le_menu == 5) && (event.motion.x >= 500) && (event.motion.x <= 700) && (event.motion.y >= 800) && (event.motion.y <= 850)){
+                    if ((dans_le_menu == 5) && (event.motion.x >= 500) && (event.motion.x <= 700) && (event.motion.y >= 650) && (event.motion.y <= 700)){
                              mouse_on_restart=1;
                         }else{
                              mouse_on_restart=0;
+                        }
+                    if ((dans_le_menu == 5) && (event.motion.x >= 520) && (event.motion.x <= 720) && (event.motion.y >= 800) && (event.motion.y <= 850)){
+                             mouse_on_exit=1;
+                        }else{
+                             mouse_on_exit=0;
                         }
            
 
@@ -853,9 +935,12 @@ void gameLoop() {
                         move_sorciere = move_sorciere + 1;
                     }
 
-                    if ((dans_le_menu==5) && (event.motion.x >= 500) && (event.motion.x <= 700) && (event.motion.y >= 800) && (event.motion.y <= 850)){
+                    if ((dans_le_menu==5) && (event.motion.x >= 500) && (event.motion.x <= 700) && (event.motion.y >= 650) && (event.motion.y <= 700)){
                         reset_variable();
                         dans_le_menu =1;
+                    }
+                    if ((dans_le_menu==5) && (event.motion.x >= 520) && (event.motion.x <= 720) && (event.motion.y >= 800) && (event.motion.y <= 850)){
+                       freeAndTerminate();
                     }
 
                 break;
