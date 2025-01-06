@@ -55,7 +55,7 @@ typedef struct iNGREDIENT{
     int apparition_ingredient;
     int x_ingred;
     int y_ingred;
-    int num_sprite;
+    int num_sprite;//sprite les différents ingrédients
 } iNGREDIENT;
 
 iNGREDIENT tableau_ingredients [100];
@@ -65,79 +65,9 @@ int compteur_frame=0;
 
 int x_score=1049;//position x de la barre violette de score
 int y_score=745;//position y de la barre violette de score
-int score_total; // le nombre de barre de score à imprimer à chaque fois que les bonus touchent la raquette
-int x_fantome,y_fantome;
-int cote_fantome;
-int fantome_switch=1;
-
-
+int score_total; 
 
    
-//                                                                            fantôme menu start
-/*void fantome_start(){  
-    int fantome_hide; 
-  
-    
-        cote_fantome= rand()%3;
-        switch (fantome_switch){
-            case 1:
-        
-            if (cote_fantome == 1){
-                x_fantome=-150;
-                while (x_fantome !=-75){
-                sprite (x_fantome,y_fantome,"sprite/fantome.bmp");
-                x_fantome ++;
-                fantome_hide=1;
-                actualize();
-               usleep (10000);
-                }
-            }else if (cote_fantome == 2) {
-                x_fantome = 1201;  
-                while (x_fantome != 1126){
-                sprite (x_fantome,y_fantome,"sprite/fantome.bmp");
-                x_fantome --;
-                fantome_hide=2;
-             actualize();
-               usleep (10000);
-                }
-            
-            }
-
-            fantome_switch++;
-            break;
-
-        
-            case 2:
-            sprite (x_fantome,y_fantome,"sprite/fantome.bmp");
-            fantome_switch = 3;
-            break;
-
-            case 3:
-            if (fantome_hide==1){
-                while (x_fantome !=-150){
-
-                sprite (x_fantome,y_fantome,"sprite/fantome.bmp");
-                x_fantome-=1;
-                actualize();
-               usleep (100000);
-                }
-              fantome_hide=0;
-            }else if (fantome_hide==2) { 
-                while (x_fantome != 1201){
-                sprite (x_fantome,y_fantome,"sprite/fantome.bmp");
-                x_fantome+=1;
-               actualize();
-               usleep (10000);
-                }
-              fantome_hide=0;
-            }
-            fantome_switch = 1;
-            break;
-            default:
-            break;
-        }
-
-    }*/
 
 //                                                                                    Menu
 void menu(){
@@ -177,6 +107,7 @@ void sorciere_menu_fin(){
 //                                                                                menu de fin
 void menu_fin(){       
 
+//sprite menu + bulle + text
          sprite(0,0,"sprite/maison_interieur_fin.bmp");
          if (nombre_vie==0){
             sprite(xsorciere,650,"sprite/sorciere_pleure.bmp"); 
@@ -196,6 +127,7 @@ void menu_fin(){
             
            }   
 
+// bouton interactif exit / restart
        switch (mouse_on_restart){
                     case 0:
                         sprite (500,650,"sprite/bouton_restart.bmp");
@@ -213,7 +145,7 @@ void menu_fin(){
                         break;
              }
 
-
+// sprite des étoiles
             if (score_total*20<400){
                 sprite(520,500,"sprite/etoile_grise.bmp");
                 sprite(580,500,"sprite/etoile_grise.bmp");
@@ -606,7 +538,7 @@ void ingrédients(){
            if (tableau_ingredients[case_tab_ingred].y_ingred > 995 ){
               tableau_ingredients[case_tab_ingred].apparition_ingredient = 0;
               ingredient_is_falling = 0;
-              score_total++; 
+             
             }
         
            if (((tableau_ingredients[case_tab_ingred].x_ingred+25>=rx) && (tableau_ingredients[case_tab_ingred].x_ingred+25<=(rx+150))) && ((tableau_ingredients[case_tab_ingred].y_ingred+50>=ry) && (tableau_ingredients[case_tab_ingred].y_ingred+50<=ry+20))){
